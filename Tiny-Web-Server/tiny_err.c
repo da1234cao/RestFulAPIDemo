@@ -1,4 +1,5 @@
 #include "tiny_err.h"
+#include <errno.h>
 #include <string.h>
 #include <stdarg.h>
 #include <sys/types.h>
@@ -33,10 +34,10 @@ void user_err_doit(const char *fmt, ...) {
     err_doit(0, 0, fmt, ap);
 }
 
-void sys_err_doit(int error, const char *fmt, ...) {
+void sys_err_doit(const char *fmt, ...) {
     va_list ap;
     va_start(ap,fmt);
-    err_doit(1, error, fmt, ap);
+    err_doit(1, errno, fmt, ap);
 }
 
 static void err_doit(int errorflag,int error, const char *fmt, va_list ap){

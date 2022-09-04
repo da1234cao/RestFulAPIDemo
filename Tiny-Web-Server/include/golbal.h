@@ -6,3 +6,9 @@
 #define ERR_BUF 1024
 
 #define LOG_FILE "log.txt"
+
+#define PORT 9999
+
+#define LISTENQ 20 // 不知道设置多大，随意设置一个
+
+#define MAXCLIENT 15 // 同时连接的最大客户端数量；要小于上面的LISTENQ
