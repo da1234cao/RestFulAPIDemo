@@ -5,6 +5,8 @@
 
 #define ERR_BUF 1024
 
+#define RECV_BUF 1024
+
 #define LOG_FILE "log.txt"
 
 #define PORT 9999
