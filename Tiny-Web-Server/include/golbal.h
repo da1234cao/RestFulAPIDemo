@@ -14,3 +14,7 @@
 #define LISTENQ 20 // 不知道设置多大，随意设置一个
 
 #define MAXCLIENT 15 // 同时连接的最大客户端数量；要小于上面的LISTENQ
+
+#define RIO_BUFSIZE 8192
+
+#define USER_BUFSIZE 8129
