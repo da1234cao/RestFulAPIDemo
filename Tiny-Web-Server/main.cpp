@@ -1,5 +1,6 @@
 #include "tiny_err.h"
 #include "rio.h"
+#include "http.h"
 #include <sys/socket.h>
 #include <bits/types.h>
 #include <netinet/in.h>
@@ -8,6 +9,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <stdlib.h>
+#include <sys/stat.h>
 #include <map>
 
 // 没有std,写且东西来有点束手束脚
@@ -130,7 +132,29 @@ int main(int argc, char *argv[])
                     rio_map.erase(socket_fd);
                     userbuf_map.erase(socket_fd);
                 } else {
-                    write(socket_fd, buf->user_buf, buf->cnt); // 回射服务器，测试连接情况
+                    // write(socket_fd, buf->user_buf, buf->cnt); // 回射服务器，测试连接情况
+                    char method[MAXLINE],uri[MAXLINE], version[MAXLINE];
+                    sscanf(buf->user_buf, "%s %s %s", method, uri, version);
+                    rio_readinitb(node, node->rio_fd); // 只要http请求中，报文首部的请求行，其他丢弃
+                    if(strcasecmp(method, "GET")) {
+                       clienterror(buf->fd, method, "501", "Not Implement","Tiny does not implement this method"); 
+                       continue; // method中存储的不一定是方法，可能是首部中的其他内容
+                    }
+                    char filename[MAXLINE];
+                    strcpy(filename, "./public");
+                    strcat(filename, uri);
+                    if (uri[strlen(uri)-1] == '/')
+                        strcat(filename, "index.html");
+                    struct stat sbuf;
+                    if (stat(filename, &sbuf) < 0) {
+                        clienterror(buf->fd, filename, "404", "Not found", "Tiny couldn't read the file");
+                        continue;
+                    }
+                    if (!(S_ISREG(sbuf.st_mode)) || !(S_IRUSR & sbuf.st_mode)) {
+                        clienterror(buf->fd, filename, "403", "Forbidden", "Tiny couldn't read the file");
+                        continue;
+                    }
+                    serve_static(buf->fd, filename, sbuf.st_size);
                 }
                 nready--;
                 if(nready <= 0)

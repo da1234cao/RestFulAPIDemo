@@ -18,3 +18,5 @@
 #define RIO_BUFSIZE 8192
 
 #define USER_BUFSIZE 8129
+
+#define MAXLINE 1024
