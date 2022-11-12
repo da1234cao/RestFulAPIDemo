@@ -1,0 +1,11 @@
+# 日志文件
+[log]
+path = 'tiny-server.log'
+level = 'debug'
+max_file_size = 1 # MB单位
+max_files = 3
+
+# 服务器配置
+[server]
+port = 9999 # 服务器监听端口
+max_thread_num = 2 # 线程池中线程数量
