@@ -9,3 +9,13 @@ max_files = 3
 [server]
 port = 9999 # 服务器监听端口
 max_thread_num = 2 # 线程池中线程数量
+
+# mysql数据库信息
+## notice, dont do bad things !!
+[sql]
+name = 'dacao'
+password = 'qwert'
+host = '127.0.0.1'
+schema = 'message_board'
+table = 'message'
+pool_size = 2

@@ -9,7 +9,8 @@ SET(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
 # endif()
 
 # boost
-find_package(Boost REQUIRED)
+find_package(Boost REQUIRED
+             COMPONENTS json)
 include_directories(${Boost_INCLUDE_DIRS})
 link_directories(${Boost_LIBRARY_DIRS})
 

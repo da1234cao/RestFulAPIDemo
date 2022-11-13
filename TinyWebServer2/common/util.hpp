@@ -96,19 +96,24 @@ class threadsafe_queue
 };
 
 class epoll_help {
-public:
+private:
   epoll_help() = default;
+public:
   static epoll_help& instance() {
 		static epoll_help instance;
 		return instance;
 	}
 
-  void addfd(int epollfd, int fd) {
-    // 默认水平触发，默认ONESHOT(如果是边缘触发，需要将fd设置为非阻塞 -- 在没有数据可读时，该文件描述符不会一直阻塞 -- 因为要读到无数据可读才行)
+  void addfd(int epollfd, int fd, bool one_shot) {
+    // 不能默认是ONESHOT。因为监听套接字，不应该被设置成one_shot
+    // 默认水平触发(如果是边缘触发，需要将fd设置为非阻塞 -- 在没有数据可读时，该文件描述符不会一直阻塞 -- 因为要读到无数据可读才行)
     // EPOLLRDHUP 表示读关闭(对端发送 FIN)。当读关闭的时候，关闭套接字
     epoll_event event;
     event.data.fd = fd;
-    event.events = EPOLLIN | EPOLLRDHUP | EPOLLONESHOT;
+    event.events = EPOLLIN | EPOLLRDHUP;
+    if(one_shot) {
+      event.events |= EPOLLONESHOT;
+    }
     epoll_ctl(epollfd, EPOLL_CTL_ADD, fd, &event);
   }
 

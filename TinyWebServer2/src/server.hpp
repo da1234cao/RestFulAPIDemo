@@ -77,7 +77,7 @@ void server::event_listen() {
     Log::LOG_ERROR("failed to call epoll_create function.");
     BOOST_THROW_EXCEPTION(server_exception() << err_str("failed to call epoll_create function."));
   }
-  utils::epoll_help::instance().addfd(m_epollfd, m_listenfd);
+  utils::epoll_help::instance().addfd(m_epollfd, m_listenfd, false);
 }
 
 void server::event_loop()
@@ -103,7 +103,7 @@ void server::event_loop()
           Log::LOG_ERROR("accept fail.");
           continue;
         }
-        utils::epoll_help::instance().addfd(m_epollfd, connfd);
+        utils::epoll_help::instance().addfd(m_epollfd, connfd, true);
         connects[connfd] = std::shared_ptr<tiny::http>(new tiny::http(m_epollfd, connfd));
       } else if(events[i].events & EPOLLIN) { // 读-丢给线程池处理
         pool.append(connects[sockfd]);

@@ -45,7 +45,7 @@ public:
   void execute();
   void get_headers(std::map<std::string, std::string> &headers);
   std::string get_url();
-  std::string get_methed();
+  std::string get_method();
   std::string get_body();
   bool is_valid();
   static int on_header_field_cb(http_parser *parser, const char *buf, size_t len);
@@ -123,7 +123,7 @@ std::string request::get_url() {
   return m_url;
 }
 
-std::string request::get_methed() {
+std::string request::get_method() {
   return m_methed;
 }
 

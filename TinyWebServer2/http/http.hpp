@@ -3,11 +3,11 @@
 #include "common/util.hpp"
 #include "common/log.hpp"
 #include "request.hpp"
+#include "message_board.hpp"
 #include <boost/beast/http.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/asio/buffer.hpp>
 #include <boost/beast/core/buffers_to_string.hpp>
-// #include <boost/json.hpp>
 #include <unistd.h>
 #include <string.h>
 #include <string>
@@ -45,6 +45,7 @@ public:
         utils::epoll_help::instance().modfd(m_epollfd, m_sockfd, EPOLLRDHUP);
         return;
       }
+      Log::LOG_TRACE("socket {} receive: {}", m_sockfd, std::string(tmp_buf)); 
       m_recv_buf.append(std::string(tmp_buf, bytes_read));
 
       // 当获取到完整的http请求后，将http状态修改为可写 -- 准备response
@@ -52,18 +53,12 @@ public:
       m_request.data(m_recv_buf.c_str(), m_recv_buf.size());
       m_request.execute();
       if(m_request.is_valid()) {
-        if(m_request.get_methed() == "GET") {
-          if(m_request.get_url() == "/message_board/all") {
-            namespace http = boost::beast::http;
-            http::response<http::string_body> resp;
-            resp.set(http::field::server, "tiny-server"); 
-            resp.set(http::field::access_control_allow_origin, "*"); 
-            resp.set(http::field::content_type, "application/json;charset=utf8");
-            resp.body() = "hello world"; 
-            resp.prepare_payload(); 
-            resp.result(http::status::ok);
-            m_send_buf = boost::lexical_cast<std::string>(resp.base()) + std::string(resp.body().data());
-          }
+        std::map<std::string, std::string> request_heads;
+        m_request.get_headers(request_heads);
+        std::string url = "http://" + request_heads["Host"] + m_request.get_url(); // 不提供https接口
+        Log::LOG_DEBUG("url is: {}", url);
+        if(url.find("message_board") != std::string::npos) {
+          message_board::execute(m_request.get_method(), url, m_send_buf);
         }
         m_status = WRITEBALE;
         utils::epoll_help::instance().modfd(m_epollfd, m_sockfd, EPOLLOUT);
@@ -73,6 +68,7 @@ public:
       int sended = 0;
       while(sended < m_send_buf.size()) {
         int n = write(m_sockfd, m_send_buf.c_str() + sended, m_send_buf.size() - sended);
+        Log::LOG_TRACE("socket {} send: {}", m_sockfd, m_send_buf.substr(sended, n));
         sended += n;
       }
 

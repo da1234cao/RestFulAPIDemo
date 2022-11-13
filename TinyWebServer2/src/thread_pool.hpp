@@ -37,6 +37,7 @@ void thread_pool<T>::append(std::shared_ptr<T> task) {
   // 工作队列中放入一个任务；使用信号量唤醒一个线程
   m_workqueue.push(task);
   sem.post();
+  Log::LOG_TRACE("thread pool appended a task.");
 }
 
 template<typename T>
@@ -48,5 +49,6 @@ void thread_pool<T>::run() {
     std::shared_ptr<T> task;
     m_workqueue.try_pop(task);
     task->process();
+    Log::LOG_TRACE("thread pool processed");
   }
 }
