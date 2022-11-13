@@ -55,6 +55,16 @@ public:
       if(m_request.is_valid()) {
         if(m_request.get_url().find("message_board") != std::string::npos) {
           message_board::execute(m_request, m_send_buf);
+        } else {
+          Log::LOG_INFO("bad request. not match: {}", m_request.to_string());
+          namespace http = boost::beast::http;
+          http::response<http::string_body> resp;
+          resp.set(http::field::server, "tiny-server"); 
+          resp.set(http::field::access_control_allow_origin, "*"); 
+          resp.set(http::field::content_type, "application/json;charset=utf8");
+          resp.result(http::status::not_found);
+          resp.prepare_payload(); 
+          m_send_buf = boost::lexical_cast<std::string>(resp.base()) + std::string(resp.body().data());
         }
         m_status = WRITEBALE;
         utils::epoll_help::instance().modfd(m_epollfd, m_sockfd, EPOLLOUT);
