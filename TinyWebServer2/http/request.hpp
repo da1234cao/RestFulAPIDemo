@@ -6,6 +6,7 @@
 #include <string>
 #include <functional>
 #include <map>
+#include <sstream>
 
 namespace tiny{
 enum request_status {
@@ -54,6 +55,7 @@ public:
   static int on_headers_complete_cb(http_parser *parser);
   static int on_body_cb(http_parser *parser, const char *buf, size_t len);
   static int on_message_complete_cb(http_parser *parser);
+  std::string to_string();
 };
 
 request::request() {
@@ -170,6 +172,10 @@ int request::on_message_complete_cb(http_parser *parser) {
   self_type *impl = reinterpret_cast<self_type*>(parser->data);
   impl->set_request_status(REQUEST_VALID);
   return 0;
+}
+
+std::string request::to_string() {
+  return std::string(m_data, m_len);
 }
 
 } // http namespace

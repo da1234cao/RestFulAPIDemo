@@ -48,17 +48,13 @@ public:
       Log::LOG_TRACE("socket {} receive: {}", m_sockfd, std::string(tmp_buf)); 
       m_recv_buf.append(std::string(tmp_buf, bytes_read));
 
-      // 当获取到完整的http请求后，将http状态修改为可写 -- 准备response
+      // 当获取到完整的http请求后，进行处理，并准备response
       // 同时设置相关联的fd可写
       m_request.data(m_recv_buf.c_str(), m_recv_buf.size());
       m_request.execute();
       if(m_request.is_valid()) {
-        std::map<std::string, std::string> request_heads;
-        m_request.get_headers(request_heads);
-        std::string url = "http://" + request_heads["Host"] + m_request.get_url(); // 不提供https接口
-        Log::LOG_DEBUG("url is: {}", url);
-        if(url.find("message_board") != std::string::npos) {
-          message_board::execute(m_request.get_method(), url, m_send_buf);
+        if(m_request.get_url().find("message_board") != std::string::npos) {
+          message_board::execute(m_request, m_send_buf);
         }
         m_status = WRITEBALE;
         utils::epoll_help::instance().modfd(m_epollfd, m_sockfd, EPOLLOUT);
