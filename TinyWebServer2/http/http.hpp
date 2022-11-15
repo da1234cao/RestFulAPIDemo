@@ -28,7 +28,6 @@ private:
   http_status m_status = UNKNOW;
   std::string m_recv_buf;
   std::string m_send_buf;
-  tiny::request m_request;
   int m_epollfd;
   int m_sockfd;
 public:
@@ -47,12 +46,15 @@ public:
       }
       Log::LOG_TRACE("socket {} receive: {}", m_sockfd, std::string(tmp_buf)); 
       m_recv_buf.append(std::string(tmp_buf, bytes_read));
+      Log::LOG_TRACE("m_recv_buf: {}", m_recv_buf); 
 
       // 当获取到完整的http请求后，进行处理，并准备response
       // 同时设置相关联的fd可写
+      tiny::request m_request; // 每次创建一个新的吧，虽然有点浪费之前的解析过程
       m_request.data(m_recv_buf.c_str(), m_recv_buf.size());
       m_request.execute();
       if(m_request.is_valid()) {
+        m_send_buf.clear();
         if(m_request.get_url().find("message_board") != std::string::npos) {
           message_board::execute(m_request, m_send_buf);
         } else {
@@ -66,6 +68,7 @@ public:
           resp.prepare_payload(); 
           m_send_buf = boost::lexical_cast<std::string>(resp.base()) + std::string(resp.body().data());
         }
+        m_recv_buf.clear();
         m_status = WRITEBALE;
         utils::epoll_help::instance().modfd(m_epollfd, m_sockfd, EPOLLOUT);
       }
@@ -79,7 +82,8 @@ public:
       }
 
       // 写完毕，进行状态转换
-      m_recv_buf.clear();
+      // m_recv_buf.clear();
+      m_send_buf.clear();
       m_status = READABLE;
       if(m_status == READABLE) {
         utils::epoll_help::instance().modfd(m_epollfd, m_sockfd, EPOLLIN);

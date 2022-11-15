@@ -1,7 +1,7 @@
 # 日志文件
 [log]
 path = 'tiny-server.log'
-level = 'debug'
+level = 'trace'
 max_file_size = 1 # MB单位
 max_files = 3
 

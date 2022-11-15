@@ -17,7 +17,7 @@
 
 class message_board {
 private:
-  static std::string vec_pair_to_string(std::vector<std::pair<std::string, std::string>> &info);
+  static std::string vec_vec_to_string(std::vector<std::vector<std::string>> &info);
 public:
   message_board(const message_board&) = delete;
   message_board& operator=(const message_board&) = delete;
@@ -36,7 +36,7 @@ void message_board::execute(tiny::request &request, std::string &resp_str) {
 
   // 这个函数太长了.最好分成不同的方法
   if(method == "GET" && path == "/message_board/all") {
-    std::vector<std::pair<std::string, std::string>> resp_body_vec;
+    std::vector<std::vector<std::string>> resp_body_vec;
 
     std::string sql_schema, sql_table;
     config::instance().get("sql_schema", sql_schema);
@@ -47,7 +47,11 @@ void message_board::execute(tiny::request &request, std::string &resp_str) {
     mysqlx::RowResult result = tb.select("*").execute();
     std::list<mysqlx::Row> rows = result.fetchAll();
     for(auto row : rows) {
-      resp_body_vec.emplace_back(std::make_pair(row[0], row[1]));
+      std::vector<std::string> tmp;
+      for(int i=0; i<3; i++) {
+        tmp.emplace_back(row[i]);
+      } 
+      resp_body_vec.emplace_back(tmp);
     }
 
     namespace http = boost::beast::http;
@@ -55,7 +59,7 @@ void message_board::execute(tiny::request &request, std::string &resp_str) {
     resp.set(http::field::server, "tiny-server"); 
     resp.set(http::field::access_control_allow_origin, "*"); 
     resp.set(http::field::content_type, "application/json;charset=utf8");
-    resp.body() = vec_pair_to_string(resp_body_vec); 
+    resp.body() = vec_vec_to_string(resp_body_vec); 
     resp.prepare_payload(); 
     resp.result(http::status::ok);
     resp_str = boost::lexical_cast<std::string>(resp.base()) + std::string(resp.body().data());
@@ -77,6 +81,7 @@ void message_board::execute(tiny::request &request, std::string &resp_str) {
 
       std::string name = boost::json::string_view(body_obj["name"].as_string());
       std::string message = boost::json::string_view(body_obj["message"].as_string());
+      std::string time = boost::json::string_view(body_obj["time"].as_string());
       
       std::string sql_schema, sql_table;
       config::instance().get("sql_schema", sql_schema);
@@ -84,7 +89,7 @@ void message_board::execute(tiny::request &request, std::string &resp_str) {
       mysqlx::Session sess = sql::instance().getSession();
       mysqlx::Schema db= sess.getSchema("message_board");
       mysqlx::Table tb = db.getTable("message");
-      tb.insert("username", "message").values(name, message).execute();
+      tb.insert("username", "message", "time").values(name, message, time).execute();
       resp.result(http::status::ok);
     }
     catch (const std::exception) {
@@ -111,12 +116,13 @@ void message_board::execute(tiny::request &request, std::string &resp_str) {
   }
 }
 
-std::string message_board::vec_pair_to_string(std::vector<std::pair<std::string, std::string>> &info) {
+std::string message_board::vec_vec_to_string(std::vector<std::vector<std::string>> &info) {
     boost::json::array info_array;
     for(auto &in : info) {
       boost::json::object obj;
-      obj["name"] = in.first;
-      obj["message"] = in.second;
+      obj["name"] = in[0];
+      obj["message"] = in[1];
+      obj["time"] = in[2];
       info_array.emplace_back(obj);
     }
     boost::json::object info_json;
