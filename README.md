@@ -7,6 +7,8 @@
 
 ## 文档
 
+演示与介绍视频：[从头实现一个留言板-BiliBili](https://www.bilibili.com/video/BV18P411g7tr/)
+
 所有文档见：[从头实现一个web留言板](https://blog.csdn.net/sinat_38816924/category_12104405.html)
 
 **罗马不是一天建成的。链接中的文档包含一个个独立可运行的代码。最后所有的代码逻辑，拼凑成这个项目**。(这是有趣的地方)
